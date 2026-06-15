@@ -37,7 +37,7 @@ def scrape_internshala():
           "company": "TCS",
             "role": "Software Engineer",
             "location": "Pune",
-            "salary": "6 LPA",
+            "salary": "600000",
             "job_type": "Full Time",
             "eligibility": "BCA/BSc",
             "deadline": "2026-12-31",

@@ -153,6 +153,80 @@ def search_jobs_by_location(location):
 
     return [dict(job) for job in jobs]
 
+def search_jobs_by_salary(min_salary):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT * FROM jobs
+        WHERE CAST(salary AS INTEGER) >= ?
+        """,
+        (min_salary,)
+    )
+
+    jobs = cursor.fetchall()
+
+    conn.close()
+
+    return jobs
+
+def search_jobs_by_type(job_type):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT * FROM jobs
+        WHERE job_type = ?
+        """,
+        (job_type,)
+    )
+
+    jobs = cursor.fetchall()
+
+    conn.close()
+
+    return jobs
+
+def search_jobs_by_salary_range(min_salary, max_salary):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT * FROM jobs
+        WHERE CAST(salary AS INTEGER)
+        BETWEEN ? AND ?
+        """,
+        (min_salary, max_salary)
+    )
+
+    jobs = cursor.fetchall()
+
+    conn.close()
+
+    return jobs
+
+def get_latest_jobs():
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT * FROM jobs
+        ORDER BY id DESC
+    """)
+
+    jobs = cursor.fetchall()
+
+    conn.close()
+
+    return jobs
+
 def filter_jobs(company, location):
 
     conn = get_connection()

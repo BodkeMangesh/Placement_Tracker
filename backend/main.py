@@ -7,10 +7,15 @@ from crud import (
     add_job,
     get_all_jobs,
     get_job_by_id,
+    get_job_by_company_role,
     update_job,
     delete_job,
     search_jobs_by_company,
     search_jobs_by_location,
+    search_jobs_by_salary,
+    search_jobs_by_salary_range,
+    search_jobs_by_type,
+    get_latest_jobs,
     filter_jobs
 )
 
@@ -49,12 +54,48 @@ def filter_job(company: str, location: str):
 
     return filter_jobs(company, location)
 
+@app.get("/jobs/salary")
+def get_jobs_by_salary(min_salary: int):
+
+    return search_jobs_by_salary(min_salary)
+
+@app.get("/jobs/type")
+def get_jobs_by_type(job_type: str):
+
+    return search_jobs_by_type(job_type)
+
+@app.get("/jobs/salary-range")
+def get_jobs_salary_range(
+    min_salary: int,
+    max_salary: int
+):
+    return search_jobs_by_salary_range(
+        min_salary,
+        max_salary
+    )
+
+@app.get("/jobs/latest")
+def latest_jobs():
+
+    return get_latest_jobs()
+
 @app.post("/jobs")
 def create_job(job: Job):
+
+    existing_job = get_job_by_company_role(
+        job.company,
+        job.role
+    )
+
+    if existing_job:
+        return {"message": "Job already exists"}
 
     add_job(
         company=job.company,
         role=job.role,
+        location=job.location,
+        salary=job.salary,
+        job_type=job.job_type,
         eligibility=job.eligibility,
         deadline=job.deadline,
         link=job.link,
