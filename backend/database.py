@@ -1,4 +1,5 @@
 import sqlite3
+import bcrypt 
 
 DB_NAME = "jobs.db"
 
@@ -29,3 +30,68 @@ def create_table():
     conn.commit()
     conn.close()
 
+
+def create_users_table():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        role TEXT DEFAULT 'user'
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+def get_all_users():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM users")
+
+    users = cursor.fetchall()
+
+    conn.close()
+
+    return [dict(user) for user in users]
+
+def add_user(name, email, password, role="user"):
+
+    hashed_password = bcrypt.hashpw(
+        password.encode("utf-8"),
+        bcrypt.gensalt()
+    ).decode("utf-8")
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        INSERT INTO users (name, email, password, role)
+        VALUES (?, ?, ?, ?)
+        """,
+        (name, email, hashed_password, role)
+    )
+
+    conn.commit()
+    conn.close()
+
+def get_user_by_email(email):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT * FROM users WHERE email = ?",
+        (email,)
+    )
+
+    user = cursor.fetchone()
+
+    conn.close()
+
+    return dict(user) if user else None

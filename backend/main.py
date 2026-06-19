@@ -1,5 +1,8 @@
-from fastapi import FastAPI 
-from database import create_table
+import bcrypt
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from database import create_table, create_users_table, get_all_users
 
 from scraper import run_all_scrapers, save_jobs_to_db
 
@@ -8,8 +11,10 @@ from crud import (
     get_all_jobs,
     get_job_by_id,
     get_job_by_company_role,
+    get_jobs_by_location,
     update_job,
     delete_job,
+    remove_duplicate_jobs,
     search_jobs_by_company,
     search_jobs_by_location,
     search_jobs_by_salary,
@@ -19,13 +24,26 @@ from crud import (
     filter_jobs
 )
 
+from models import UserRegister, UserLogin
+from database import add_user
+from database import get_user_by_email
+
 from models import Job
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.on_event("startup")
 def startup():
     create_table()
+    create_users_table()
 
 @app.get("/")
 def home():
@@ -48,6 +66,11 @@ def search_jobs(company: str):
 def search_location(location: str):
 
     return search_jobs_by_location(location)
+
+@app.get("/jobs/location/{location}")
+def jobs_by_location(location: str):
+
+    return get_jobs_by_location(location)
 
 @app.get("/jobs/filter")
 def filter_job(company: str, location: str):
@@ -114,6 +137,13 @@ def get_job(job_id: int):
 
     return {"error": "Job not found"}
 
+@app.delete("/jobs/remove-duplicates")
+def delete_duplicates():
+
+    remove_duplicate_jobs()
+
+    return {"message": "Duplicate jobs removed"}
+
 @app.delete("/jobs/{job_id}")
 def remove_job(job_id: int):
 
@@ -160,3 +190,44 @@ def save_jobs():
         "total": total
     }
 
+@app.get("/users")
+def get_users():
+    return get_all_users()
+
+
+@app.post("/register")
+def register(user: UserRegister):
+
+    add_user(
+        user.name,
+        user.email,
+        user.password
+    )
+
+@app.post("/login")
+def login(user: UserLogin):
+
+    db_user = get_user_by_email(user.email)
+
+    if not db_user:
+        return {
+            "message": "User not found"
+        }
+
+    password_match = bcrypt.checkpw(
+        user.password.encode("utf-8"),
+        db_user["password"].encode("utf-8")
+    )
+
+    if not password_match:
+        return {
+            "message": "Invalid password"
+        }
+
+    return {
+        "message": "Login successful"
+    }
+
+    return {
+        "message": "User registered successfully"
+    }

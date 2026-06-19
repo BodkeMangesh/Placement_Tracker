@@ -95,6 +95,23 @@ def delete_job(job_id):
     conn.commit()
     conn.close()
 
+def remove_duplicate_jobs():
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        DELETE FROM jobs
+        WHERE id NOT IN (
+            SELECT MIN(id)
+            FROM jobs
+            GROUP BY company, role
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
 def get_job_by_company_role(company, role):
 
     conn = get_connection()
@@ -238,6 +255,25 @@ def filter_jobs(company, location):
         WHERE company = ? AND location = ?
         """,
         (company, location)
+    )
+
+    jobs = cursor.fetchall()
+
+    conn.close()
+
+    return [dict(job) for job in jobs]
+
+def get_jobs_by_location(location):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT * FROM jobs
+        WHERE location = ?
+        """,
+        (location,)
     )
 
     jobs = cursor.fetchall()
