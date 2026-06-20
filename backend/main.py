@@ -2,7 +2,7 @@ import bcrypt
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from database import create_table, create_users_table, get_all_users
+from database import create_table, create_users_table, get_all_users, add_user, get_user_by_email
 
 from scraper import run_all_scrapers, save_jobs_to_db
 
@@ -25,8 +25,6 @@ from crud import (
 )
 
 from models import UserRegister, UserLogin
-from database import add_user
-from database import get_user_by_email
 
 from models import Job
 
@@ -204,30 +202,6 @@ def register(user: UserRegister):
         user.password
     )
 
-@app.post("/login")
-def login(user: UserLogin):
-
-    db_user = get_user_by_email(user.email)
-
-    if not db_user:
-        return {
-            "message": "User not found"
-        }
-
-    password_match = bcrypt.checkpw(
-        user.password.encode("utf-8"),
-        db_user["password"].encode("utf-8")
-    )
-
-    if not password_match:
-        return {
-            "message": "Invalid password"
-        }
-
-    return {
-        "message": "Login successful"
-    }
-
-    return {
+    return{
         "message": "User registered successfully"
     }

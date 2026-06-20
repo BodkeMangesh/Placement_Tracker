@@ -116,9 +116,9 @@ export default function Home() {
       
       <div>
         <a href="#">Home</a>
-        <a href="#">Jobs</a>
-        <a href="#">About</a>
         <a href="/saved">Saved Jobs</a>
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
       </div>
       </nav>  
 

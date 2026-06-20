@@ -4,7 +4,12 @@ import bcrypt
 DB_NAME = "jobs.db"
 
 def get_connection():
-    conn = sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect(
+        DB_NAME,
+        timeout=30,
+        check_same_thread=False
+    )
+    conn.execute("PRAGMA journal_mode=WAL;")
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -61,25 +66,28 @@ def get_all_users():
     return [dict(user) for user in users]
 
 def add_user(name, email, password, role="user"):
-
-    hashed_password = bcrypt.hashpw(
-        password.encode("utf-8"),
-        bcrypt.gensalt()
-    ).decode("utf-8")
-
     conn = get_connection()
-    cursor = conn.cursor()
 
-    cursor.execute(
-        """
-        INSERT INTO users (name, email, password, role)
-        VALUES (?, ?, ?, ?)
-        """,
-        (name, email, hashed_password, role)
-    )
+    try:
+        hashed_password = bcrypt.hashpw(
+            password.encode("utf-8"),
+            bcrypt.gensalt()
+        ).decode("utf-8")
 
-    conn.commit()
-    conn.close()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            INSERT INTO users (name, email, password, role)
+            VALUES (?, ?, ?, ?)
+            """,
+            (name, email, hashed_password, role)
+        )
+
+        conn.commit()
+
+    finally:
+        conn.close()
 
 def get_user_by_email(email):
     conn = get_connection()
