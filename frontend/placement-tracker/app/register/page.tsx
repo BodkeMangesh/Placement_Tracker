@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react"; 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
   
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const router = useRouter();
 
   const handleRegister = async () => {
       const response = await fetch(
@@ -30,7 +32,12 @@ export default function RegisterPage() {
       console.log("Response:", text);
 
       alert(text);
-    }   
+
+      if (response.ok) {
+        router.push("/login");
+      }
+    }; 
+      
   return (
     <div className="container">
       <h1>Register</h1>

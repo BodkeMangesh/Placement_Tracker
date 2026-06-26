@@ -3,28 +3,26 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";  
 
-export default function SavedJobsPage() {
-  
+export default function AppliedJobsPage() {
   const router = useRouter();
-  
-  const [savedJobs, setSavedJobs] = useState<number[]>([]);
+
+  const [appliedJobs, setAppliedJobs] = useState<number[]>([]);
   const [jobs, setJobs] = useState<any[]>([]);
 
   useEffect(() => {
+    const user = localStorage.getItem("user");
 
-  const user = localStorage.getItem("user");
-
-  if (!user) {
-    router.push("/login");
-    return;
-  }
-
-  const saved = localStorage.getItem("savedJobs");
-
-      if (saved) {
-        setSavedJobs(JSON.parse(saved));
+      if (!user) {
+        router.push("/login");
+        return;
       }
-    }, [router]);
+   
+    const applied = localStorage.getItem("appliedJobs");
+
+    if (applied) {
+      setAppliedJobs(JSON.parse(applied));
+    }
+   }, [router]);
 
   useEffect(() => {
     fetch("http://localhost:8000/jobs")
@@ -33,30 +31,30 @@ export default function SavedJobsPage() {
       .catch((err) => console.error(err));
   }, []);
 
-  const savedJobData = jobs.filter((job: any) =>
-    savedJobs.includes(job.id)
+  const appliedJobData = jobs.filter((job: any) =>
+    appliedJobs.includes(job.id)
   );
 
-  const removeSavedJob = (jobId: number) => {
-    const updatedJobs = savedJobs.filter(
+  const removeAppliedJob = (jobId: number) => {
+    const updatedJobs = appliedJobs.filter(
       (id) => id !== jobId
     );
 
-    setSavedJobs(updatedJobs);
+    setAppliedJobs(updatedJobs);
 
     localStorage.setItem(
-      "savedJobs",
+      "appliedJobs",
       JSON.stringify(updatedJobs)
     );
   };
 
   return (
     <div className="container">
-      <h1 className="title">Saved Jobs ❤️</h1>
+      <h1 className="title">Applied Jobs 🚀</h1>
 
-      <p>Total Saved Jobs: {savedJobs.length}</p>
+      <p>Total Applied Jobs: {appliedJobs.length}</p>
 
-      {savedJobData.map((job: any) => (
+      {appliedJobData.map((job: any) => (
         <div
           key={job.id}
           className="job-card"
@@ -75,7 +73,9 @@ export default function SavedJobsPage() {
 
           <button
             className="apply-btn"
-            onClick={() => removeSavedJob(job.id)}
+            onClick={() =>
+              removeAppliedJob(job.id)
+            }
           >
             Remove
           </button>

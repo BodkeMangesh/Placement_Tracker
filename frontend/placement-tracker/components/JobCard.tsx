@@ -3,9 +3,27 @@ type JobProps = {
   onView: () => void;
   onSave: () => void;
   onDelete: () => void;
+  onApply: () => void;
 };
 
-export default function JobCard({ job, onView,  onSave, onDelete, }: JobProps) {
+export default function JobCard({ job, onView,  onSave, onDelete, onApply}: JobProps) {
+
+  const today = new Date();
+
+  const deadline = new Date(job.deadline);
+
+  const diffTime = deadline.getTime() - today.getTime();
+  
+  const formattedDeadline = deadline.toLocaleDateString("en-IN" , {
+    day: "numeric",
+    month: "short",
+    year: "numeric"
+  });
+
+  const daysLeft = Math.ceil(
+    diffTime / (1000 * 60 * 60 * 24)
+  );
+  
   return (
     <div className="job-card">
       <h2 className="company-name">
@@ -30,6 +48,29 @@ export default function JobCard({ job, onView,  onSave, onDelete, }: JobProps) {
         <strong>Source:</strong> {job.source}
       </p>
 
+      <p>
+        <strong> Deadline:</strong> {formattedDeadline}
+      </p>
+
+      <p>
+        <strong>Days Left:</strong> 
+         {daysLeft > 1 && (
+             <>⏳ {daysLeft} Days Left</>
+          )}
+
+          {daysLeft === 1 && (
+            <>⚠️ Last Day to Apply</>
+          )}
+
+          {daysLeft === 0 && (
+            <>🔥 Apply Today</>
+          )}
+
+          {daysLeft < 0 && (
+            <>❌ Deadline Expired</>
+          )}
+      </p>
+
         <button
             className="apply-btn"
             onClick={onView}
@@ -52,16 +93,14 @@ export default function JobCard({ job, onView,  onSave, onDelete, }: JobProps) {
           >
           Delete
         </button>
-        <a
-            href={job.link}
-            target="_blank"
-            rel="noopener noreferrer"
-        >
+        
 
-        <button className="apply-btn">
+        <button 
+            className="apply-btn"
+            onClick={onApply}
+        >
           Apply Now
         </button>
-        </a>
     </div>
   );
 }

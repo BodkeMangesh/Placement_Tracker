@@ -192,9 +192,15 @@ def save_jobs():
 def get_users():
     return get_all_users()
 
-
 @app.post("/register")
 def register(user: UserRegister):
+
+    existing_user = get_user_by_email(user.email)
+
+    if existing_user:
+        return {
+            "message": "Email already registered"
+        }
 
     add_user(
         user.name,
@@ -202,6 +208,36 @@ def register(user: UserRegister):
         user.password
     )
 
-    return{
+    return {
         "message": "User registered successfully"
     }
+
+@app.post("/login")
+def login(user: UserLogin):
+
+    db_user = get_user_by_email(user.email)
+
+    if not db_user:
+        return {
+            "message": "User not found"
+        }
+
+    password_match = bcrypt.checkpw(
+        user.password.encode("utf-8"),
+        db_user["password"].encode("utf-8")
+    )
+
+    if not password_match:
+        return {
+            "message": "Invalid password"
+        }
+
+    return {
+    "message": "Login successful",
+    "user": {
+        "id": db_user["id"],
+        "name": db_user["name"],
+        "email": db_user["email"],
+        "role": db_user["role"]
+    }
+}

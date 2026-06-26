@@ -1,0 +1,36 @@
+
+.title {
+  margin-bottom: 20px;
+}
+
+.userInfo {
+  margin-bottom: 20px;
+}
+
+.statsGrid {
+  display: grid;
+  background-color:white;
+  color: white;
+  text-align: center;
+  grid-template-columns: repeat(3, 1fr);
+  column-gap: 10px;
+}
+
+.card {
+  background: #1e293b;
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 15px;
+  margin-top: 25px;
+  justify-content: center;
+}
+
+.logoutBtn {
+  margin-top: 20px;
+}

@@ -1,126 +1,189 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import JobCard from "../components/JobCard";
 
-export default function Home() {
+
+export default function Home() 
+{
   const [jobs, setJobs] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [location, setLocation] = useState("");
   const [jobType, setJobType] = useState("");
   const [minSalary, setMinSalary] = useState("");
   const [sortOrder, setSortOrder] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [savedJobs, setSavedJobs] = useState<number[]>([]);
+  const router = useRouter();
 
-  useEffect(() => {
-    fetch("http://localhost:8000/jobs")
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("API DATA:", data);
-        setJobs(data);
-      })
-      .catch((err) => console.error(err));
+  useEffect(() => 
+    {
+      fetch("http://localhost:8000/jobs")
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("API DATA:", data);
+            setJobs(data);
+          })
+        .catch((err) => console.error(err));
 
-      const saved = localStorage.getItem("savedJobs");
+        const user = localStorage.getItem("user");
+
+          if (user) {
+            setIsLoggedIn(true);
+          }
+
+        const saved = localStorage.getItem("savedJobs");
 
         if (saved) {
           setSavedJobs(JSON.parse(saved));
         }
+    }, []);
 
-  }, []);
+  const saveJob = (jobId: number) =>
+  {
+    const user = localStorage.getItem("user");
 
-  useEffect(() => {
-    fetch("http://localhost:8000/jobs")
-      .then((res) => res.json())
-      .then((data) => setJobs(data))
-      .catch((err) => console.error(err));
-  }, []);
+      if (!user) {
+        alert("Please login first");
+        router.push("/login");
 
-  const saveJob = (jobId: number) => {
-    if (savedJobs.includes(jobId)) {
+        return;
+      }
+
+    const existingJobs = JSON.parse(
+      localStorage.getItem("savedJobs") || "[]"
+    );
+
+    if (!existingJobs.includes(jobId)) {
+    const updatedJobs = [...existingJobs, jobId];
+
+        localStorage.setItem(
+        "savedJobs",
+        JSON.stringify(updatedJobs)
+      );
+
+      setSavedJobs(updatedJobs);
+
+      alert("Job saved successfully ❤️");
+    }
+  };
+  
+  const handleApply = (job: any) => 
+  { 
+
+    const user = localStorage.getItem("user");
+
+      if (!user) 
+        {
+          alert("Please login to apply");
+          router.push("/login");
+          return;
+        }
+
+    const appliedJobs = JSON.parse(
+        localStorage.getItem("appliedJobs") || "[]"
+    );
+    
+    if (!appliedJobs.includes(job.id)) {
+      appliedJobs.push(job.id);
+
+      localStorage.setItem(
+      "appliedJobs",
+      JSON.stringify(appliedJobs)
+    );
+
+      alert("Job marked as applied ✅");
+    }
+
+    window.open(job.link, "blank");
+  };  
+
+  const deleteJob = async (jobId: number) => 
+  {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this job?"
+    );
+
+    if (!confirmDelete) {
       return;
     }
-  
-  const updatedJobs = [...savedJobs, jobId];
 
-    setSavedJobs(updatedJobs);
+    try {
+      await fetch(`http://localhost:8000/jobs/${jobId}`, {
+        method: "DELETE",
+     });
 
-    localStorage.setItem(
-      "savedJobs",
-      JSON.stringify(updatedJobs)
-    );
+      setJobs(
+        jobs.filter((job: any) => job.id !== jobId)
+      );
+      } catch (error) {
+        console.error(error);
+      } 
   };
 
-  const deleteJob = async (jobId: number) => {
-     const confirmDelete = window.confirm(
-    "Are you sure you want to delete this job?"
-  );
+  const filteredJobs = jobs.filter((job: any) => 
+  {
+    const companyMatch = job.company
+        .toLowerCase()
+        .includes(search.toLowerCase());
 
-  if (!confirmDelete) {
-    return;
-  }
+    const locationMatch =
+      location === "" || job.location === location;
 
-  try {
-    await fetch(`http://localhost:8000/jobs/${jobId}`, {
-      method: "DELETE",
-    });
+    const typeMatch =
+      jobType === "" || job.job_type === jobType;
 
-    setJobs(
-      jobs.filter((job: any) => job.id !== jobId)
-    );
-    } catch (error) {
-      console.error(error);
-    } 
-  };
+    const salaryMatch =
+      minSalary ==="" ||
+      Number(job.salary) >= Number(minSalary);
 
-  const filteredJobs = jobs.filter((job: any) => {
-  const companyMatch = job.company
-      .toLowerCase()
-      .includes(search.toLowerCase());
-
-  const locationMatch =
-    location === "" || job.location === location;
-
-  const typeMatch =
-    jobType === "" || job.job_type === jobType;
-
-  const salaryMatch =
-    minSalary ==="" ||
-    Number(job.salary) >= Number(minSalary);
-
-    return companyMatch && locationMatch && typeMatch && salaryMatch;
+      return companyMatch && locationMatch && typeMatch && salaryMatch;
   });
 
-  const sortedJobs = [...filteredJobs].sort((a: any, b: any) => {
+  const sortedJobs = [...filteredJobs].sort((a: any, b: any) => 
+  {
 
-  const salaryA = Number(a.salary) || 0;
-  const salaryB = Number(b.salary) || 0;
+    const salaryA = Number(a.salary) || 0;
+    const salaryB = Number(b.salary) || 0;
 
-  if (sortOrder === "high") {
-    return salaryB - salaryA;
-  }
+    if (sortOrder === "high") {
+      return salaryB - salaryA;
+    }
 
-  if (sortOrder === "low") {
-    return salaryA - salaryB;
-  }
+    if (sortOrder === "low") {
+      return salaryA - salaryB;
+    }
 
-  return 0;
-});
+    return 0;
+  });
 
-  return (
+    return (
     <div className="container">
       <nav className="navbar">
-      <h1 className="title">CareerRadar 🚀</h1>
+      <h1 className="title">Placement Tracker🚀</h1>
       
       <div>
         <a href="#">Home</a>
-        <a href="/saved">Saved Jobs</a>
-        <a href="/login">Login</a>
-        <a href="/register">Register</a>
+        
+        {isLoggedIn ?(
+        <>
+          <a href="/saved">Saved Jobs</a>
+          <a href="/applied">Applied Jobs</a>
+          <a href="/profile">Profile</a>
+        </>
+        ) : (
+        <>
+          <a href="/login">Login</a>
+          <a href="/register">Register</a>
+        </>
+        ) 
+      }
       </div>
       </nav>  
+
 
       <div className="stats-grid">
         <div className="stat-card">
@@ -138,10 +201,10 @@ export default function Home() {
           <p>Locations</p>
         </div>
 
-        <div className="stat-card">
+        {/* <div className="stat-card">
           <h3>{savedJobs.length}</h3>
           <p>Saved Jobs</p>
-        </div>
+        </div> */}
        </div> 
 
       <div>
@@ -208,6 +271,7 @@ export default function Home() {
           onView={() => setSelectedJob(job)}
           onSave={() => saveJob(job.id)}
           onDelete={() => deleteJob(job.id)}
+          onApply={() => handleApply(job)}
         />
       ))}
       </div>
@@ -239,8 +303,26 @@ export default function Home() {
             </p>
 
             <p>
+              <strong>Deadline:</strong> {selectedJob.deadline}
+            </p>
+
+            <p>
               <strong>Source:</strong> {selectedJob.source}
             </p>
+
+            <button
+                className="apply-btn"
+                onClick={() => saveJob(selectedJob.id)}
+            >
+              Save Job
+            </button>
+
+            <button
+                className="apply-btn"
+                onClick={() => handleApply(selectedJob.id)}
+            >
+              Apply Now
+            </button>
 
            <button
               className="apply-btn"
@@ -248,8 +330,7 @@ export default function Home() {
             >
                Close
             </button>
-
-          </div>
+            </div>
         </div>
       )}
 
